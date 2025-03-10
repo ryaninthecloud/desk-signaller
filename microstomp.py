@@ -2,6 +2,7 @@
 Contains code to handle the STOMP communication and subscription.
 '''
 import usocket
+import random
 
 class Frame:
     '''
@@ -114,3 +115,35 @@ class MicroSTOMPClient:
         print('(info): server responded to connect with ', server_response)
 
         self.connected_to_broker = True
+
+    def disconnect(self):
+        '''
+        Gracefully closes the connection with the server.
+        Sets property connected_to_broker to True
+        '''
+        print('(info): disconnection initiated...')
+
+        if not self.connected_to_broker:
+            print('(info): no active connection to close.')
+
+        disconnect_reference = 100200
+        disconnect_frame = Frame(
+            command = 'DISCONNECT',
+            headers = {
+                'receipt-id' : disconnect_reference
+            },
+            body=''
+        ).built_frame
+
+        self.cx_socket.send(disconnect_frame)
+        disconnect_response = self.cx_socket.recv(1024).decode()
+
+        if 'DISCONNECT' in disconnect_response and str(disconnect_reference) in disconnect_response:
+            print('(info): graceful disconnect transaction completed')
+            self.cx_socket.close()
+            self.connected_to_broker = False
+        else:
+            print('(info): could not gracefully disconnect, force closing')
+            self.cx_socket.shutdown()
+            self.cx_socket.close()
+            self.connected_to_broker = False
