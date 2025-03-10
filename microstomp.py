@@ -110,7 +110,7 @@ class MicroSTOMPClient:
             return 1
 
         self.cx_socket.send(connect_frame)
-        server_response = self.cx_socket.recv(1024).decode()
+        server_response = self.cx_socket.recv(1024).decode("utf-8")
 
         print('(info): server responded to connect with ', server_response)
 
@@ -136,7 +136,9 @@ class MicroSTOMPClient:
         ).built_frame
 
         self.cx_socket.send(disconnect_frame)
-        disconnect_response = self.cx_socket.recv(1024).decode()
+        disconnect_response = self.cx_socket.recv(1024).decode("utf-8")
+        
+        print('(info): received response from server ', disconnect_frame)
 
         if 'DISCONNECT' in disconnect_response and str(disconnect_reference) in disconnect_response:
             print('(info): graceful disconnect transaction completed')
@@ -144,6 +146,5 @@ class MicroSTOMPClient:
             self.connected_to_broker = False
         else:
             print('(info): could not gracefully disconnect, force closing')
-            self.cx_socket.shutdown()
             self.cx_socket.close()
             self.connected_to_broker = False
