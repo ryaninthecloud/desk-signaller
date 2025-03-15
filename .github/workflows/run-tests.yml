@@ -29,8 +29,8 @@ jobs:
       - uses: actions/checkout@v4
 
       # Runs a single command using the runners shell
-      - name: open desk-signaller directory
-        run: cd desk-signaller
+      - name: list desk-signaller directory
+        run: ls
 
       - name: run unittests
         run: micropython tests.py 
