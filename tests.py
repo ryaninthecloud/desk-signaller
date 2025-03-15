@@ -71,7 +71,7 @@ class TestFrameClass(unittest.TestCase):
             'valid_header_key' : 'valid_header_value'
         }
         frame = Frame(
-            command = 'MESSAGE',
+            command = 'CONNECT',
             headers = headers_to_add,
             body = 'a normal string'
         )
@@ -96,7 +96,8 @@ class TestFrameClass(unittest.TestCase):
             body = 'a normal string'
         )
 
-        command_and_headers = re.search('(?s:.*)\n', frame.built_frame).group(0).split('\n')
+        command_and_headers = re.search('(?s:.*)\n', frame.built_frame).group(0)
+        command_and_headers = command_and_headers.split('\n')
         command_and_headers.pop(0)
         with self.subTest():
             self.assertTrue(command_and_headers[-1] == '',
@@ -121,8 +122,8 @@ class TestFrameClass(unittest.TestCase):
             headers = {},
             body=body_content
         )
-        command_and_headers = re.search('(?s:.*)\n', frame.built_frame).group(0).split('\n')
-        command_and_headers.pop(0)
+        command_and_headers = re.search('(?s:.*)\n', frame.built_frame).group(0)
+        command_and_headers = command_and_headers.split('\n')
         for header in command_and_headers:
             if 'content-length' in header:
                 header = re.split('[:]', str(header).rstrip())
