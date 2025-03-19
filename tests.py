@@ -2,9 +2,9 @@
 Code Tests for all modules within desk-signaller
 '''
 import unittest
-from microstomp import Frame
 import re
 
+from microstomp import Frame
 class TestFrameClass(unittest.TestCase):
     '''
     Contains all tests for Frame class
@@ -15,6 +15,7 @@ class TestFrameClass(unittest.TestCase):
         Test a valid instantiation of a new Frame object
         '''
         valid_commands = [
+            'MESSAGE',
             'CONNECT',
             'STOMP',
             'SUBSCRIBE',
@@ -54,7 +55,7 @@ class TestFrameClass(unittest.TestCase):
         STOMP argument.
         '''
         with self.assertRaises(ValueError):
-            f = Frame(
+            Frame(
                 command = 'INVALID_COMMAND',
                 headers = {
                     'valid_header':'valid_value'
@@ -132,6 +133,9 @@ class TestFrameClass(unittest.TestCase):
                                     'content length value not accurate')
 
     def test_parsing_frame(self):
+        '''
+        To be implemented, testing frame parsing function.
+        '''
         pass
 
 if __name__ == '__main__':

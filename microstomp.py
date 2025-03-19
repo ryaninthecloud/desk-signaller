@@ -3,8 +3,7 @@ Written as a patch-in for Stomp.py for Micropython.
 '''
 import usocket
 import utime
-import re
-import sys
+
 class Frame:
     '''
     A STOMP frame structure which adheres to
@@ -81,7 +80,7 @@ class Frame:
         frame = str(frame)
         body_content = None
         parsed_command = None
-        parsed_headers = dict()
+        parsed_headers = {}
         first_newline_index = frame.index('\n')
         last_newline_index = frame.rindex('\n')
         null_terminator_index = frame.rindex('\x00')
@@ -164,7 +163,7 @@ class MicroSTOMPClient:
             self.cx_socket.connect((self.cx_host, self.cx_port))
         except Exception as e:
             print('(fatal): cannot connect to specified host - ', e)
-            return 1
+            return False
 
         self.cx_socket.send(connect_frame)
         server_response = self.cx_socket.recv(1024).decode("utf-8")
@@ -172,6 +171,7 @@ class MicroSTOMPClient:
         print('(info): server responded to connect with ', server_response)
 
         self.connected_to_broker = True
+        return True
 
     def disconnect(self):
         '''
