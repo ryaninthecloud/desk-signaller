@@ -4,6 +4,7 @@ Written as a patch-in for Stomp.py for Micropython.
 import usocket
 import utime
 import re
+import sys
 class Frame:
     '''
     A STOMP frame structure which adheres to
@@ -21,6 +22,7 @@ class Frame:
         :command: must be string of CONNECT, STOMP, SUBSCRIBE, UNSUBSCRIBE, DISCONNECT
         '''
         if command.upper() not in [
+            'MESSAGE',
             'CONNECT',
             'STOMP',
             'SUBSCRIBE',
@@ -29,7 +31,7 @@ class Frame:
         ]:
             raise ValueError('Invalid command supplied.')
 
-        self.command = command.upper()
+        self.command = command.upper().rstrip().strip()
         self.headers = headers
         self.body = body
         self.built_frame = self.__build_frame()
@@ -43,18 +45,26 @@ class Frame:
         :returns:
         : _: utf-8 encoded string conforming to STOMP 1.2
         '''
-        _ = self.command + '''\r\n'''
+        std_terminator = '''\r\n'''
+        _ = self.command + std_terminator
         body_length = len(self.body.encode("utf-8"))
 
-        for header, value in self.headers.items():
-            _ += f'''{header}:{value}\r\n'''
+        if self.headers:
+            for header, value in self.headers.items():
+                _ += f'''{header}:{value}{std_terminator}'''
 
-        _ += f'''content-length:{body_length}\r\n'''
-
-        _ += '''\r\n'''
+        _ += f'''content-length:{body_length}{std_terminator}'''
+        _ += std_terminator
         _ += self.body + '''\x00'''
 
         return _.encode("utf-8")
+
+    def is_error(self):
+        '''
+        returns a true/false value if the command portion of the
+        frame is 'ERROR'
+        '''
+        return self.command == 'ERROR'
 
     @classmethod
     def parse_frame(cls, frame):
@@ -69,33 +79,38 @@ class Frame:
         : : Frame
         '''
         frame = str(frame)
-        command_and_headers = None
         body_content = None
         parsed_command = None
         parsed_headers = dict()
+        first_newline_index = frame.index('\n')
+        last_newline_index = frame.rindex('\n')
+        null_terminator_index = frame.rindex('\x00')
 
         try:
-            command_and_headers = re.findall('^.*\n', frame, re.MULTILINE)
-            body_content = re.search('(?<=\n)(?!.*\n)([^\\x00]*)', frame, re.MULTILINE).group(1)
-            parsed_command = str(command_and_headers[0]).replace('\n', '')
-            command_and_headers.pop(0)
+            parsed_command = frame[:first_newline_index+1].rstrip()
+            headers = frame[first_newline_index+1:last_newline_index+1]
+            headers = headers.split('\n')
+            body_content = frame[last_newline_index+1:null_terminator_index]
         except Exception as e:
             print("(critical): could not parse frame ", e)
             return False
 
-        for header in command_and_headers:
-            header = re.split('[:]', str(header).rstrip())
-            if header and len(header) > 1:
+        for header in headers:
+            if ':' in str(header) and len(header) > 1:
+                header = header.rstrip().split(':')
                 parsed_headers[header[0]] = header[1]
             else:
                 print('(warn): header could not be parsed', header)
 
-        return cls(
-            command = str(parsed_command),
-            headers = parsed_headers,
-            body = str(body_content)
-        )
-
+        try:
+            return cls(
+                command = str(parsed_command),
+                headers = parsed_headers,
+                body = str(body_content)
+            )
+        except Exception as e:
+            print('(critical): ', e)
+            return False
 
 class MicroSTOMPClient:
     '''
@@ -226,6 +241,7 @@ class MicroSTOMPClient:
         '''
         if not self.connected_to_broker:
             print('(error): cannot listen for messages when no active cx')
+            return False
         while True:
             try:
                 received_message = self.cx_socket.recv(5120).decode("utf-8")

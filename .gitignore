@@ -2,6 +2,7 @@
 test_script.py
 header_split.py
 example_content
+local_test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
