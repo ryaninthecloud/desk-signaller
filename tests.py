@@ -2,7 +2,6 @@
 Code Tests for all modules within desk-signaller
 '''
 import unittest
-import re
 
 from microstomp import Frame
 class TestFrameClass(unittest.TestCase):
@@ -76,12 +75,15 @@ class TestFrameClass(unittest.TestCase):
             headers = headers_to_add,
             body = 'a normal string'
         )
-        command_and_headers = re.search('(?s:.*)\n', frame.built_frame).group(0).split('\n')
-        command_and_headers.pop(0)
+        index_first_newline = frame.built_frame.index('\n')
+        index_final_newline = frame.built_frame.rindex('\n')
 
-        for header in command_and_headers:
+        parsed_command = frame.built_frame[:index_first_newline]
+        parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
+
+        for header in parsed_headers:
             if all(x for x in ['valid_header_key', 'valid_header_value', ':']):
-                header = re.split('[:]', str(header).rstrip())
+                header = header.rstrip().split(':')
                 self.assertTrue(header[0] == 'valid_header_key' and
                                 header[1] == 'valid_header_value',
                             'header or value is different to input in. out > {header}')          
@@ -97,16 +99,19 @@ class TestFrameClass(unittest.TestCase):
             body = 'a normal string'
         )
 
-        command_and_headers = re.search('(?s:.*)\n', frame.built_frame).group(0)
-        command_and_headers = command_and_headers.split('\n')
-        command_and_headers.pop(0)
+        index_first_newline = frame.built_frame.index('\n')
+        index_final_newline = frame.built_frame.rindex('\n')
+
+        parsed_command = frame.built_frame[:index_first_newline]
+        parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
+
         with self.subTest():
-            self.assertTrue(command_and_headers[-1] == '',
+            self.assertTrue(parsed_headers[-1] == '',
                             'line termination is not present in headers')
 
-        for header in command_and_headers:
+        for header in parsed_headers:
             if 'content-length' in header:
-                header = re.split('[:]', str(header).rstrip())
+                header = header.rstrip().split('\n')
                 with self.subTest():
                     self.assertTrue(header[0] == 'content-length',
                                     'content length header key not valid')
@@ -123,11 +128,15 @@ class TestFrameClass(unittest.TestCase):
             headers = {},
             body=body_content
         )
-        command_and_headers = re.search('(?s:.*)\n', frame.built_frame).group(0)
-        command_and_headers = command_and_headers.split('\n')
-        for header in command_and_headers:
+        index_first_newline = frame.built_frame.index('\n')
+        index_final_newline = frame.built_frame.rindex('\n')
+
+        parsed_command = frame.built_frame[:index_first_newline]
+        parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
+
+        for header in parsed_headers:
             if 'content-length' in header:
-                header = re.split('[:]', str(header).rstrip())
+                header = header.rstrip().split(':')
                 with self.subTest():
                     self.assertTrue(int(header[1]) == body_content_byte_size,
                                     'content length value not accurate')
