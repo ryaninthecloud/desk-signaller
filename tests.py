@@ -75,8 +75,8 @@ class TestFrameClass(unittest.TestCase):
             headers = headers_to_add,
             body = 'a normal string'
         )
-        index_first_newline = frame.built_frame.index('\n')
-        index_final_newline = frame.built_frame.rindex('\n')
+        index_first_newline = str(frame.built_frame).index('\n')
+        index_final_newline = str(frame.built_frame).rindex('\n')
 
         parsed_command = frame.built_frame[:index_first_newline]
         parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
@@ -99,8 +99,8 @@ class TestFrameClass(unittest.TestCase):
             body = 'a normal string'
         )
 
-        index_first_newline = frame.built_frame.index('\n')
-        index_final_newline = frame.built_frame.rindex('\n')
+        index_first_newline = str(frame.built_frame).index('\n')
+        index_final_newline = str(frame.built_frame).rindex('\n')
 
         parsed_command = frame.built_frame[:index_first_newline]
         parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
@@ -128,8 +128,8 @@ class TestFrameClass(unittest.TestCase):
             headers = {},
             body=body_content
         )
-        index_first_newline = frame.built_frame.index('\n')
-        index_final_newline = frame.built_frame.rindex('\n')
+        index_first_newline = str(frame.built_frame).index('\n')
+        index_final_newline = str(frame.built_frame).rindex('\n')
 
         parsed_command = frame.built_frame[:index_first_newline]
         parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
