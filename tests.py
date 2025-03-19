@@ -75,18 +75,21 @@ class TestFrameClass(unittest.TestCase):
             headers = headers_to_add,
             body = 'a normal string'
         )
-        index_first_newline = str(frame.built_frame).index('\n')
-        index_final_newline = str(frame.built_frame).rindex('\n')
 
-        parsed_command = frame.built_frame[:index_first_newline]
-        parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
+        frame = frame.built_frame.decode("utf-8")
+        index_first_newline = frame.index("\n")
+        index_final_newline = frame.rindex("\n")
+
+        parsed_command = frame[:index_first_newline]
+        parsed_headers = frame[index_first_newline:index_final_newline].split('\n')
 
         for header in parsed_headers:
-            if all(x for x in ['valid_header_key', 'valid_header_value', ':']):
+            if 'valid_header_key' in header:
                 header = header.rstrip().split(':')
                 self.assertTrue(header[0] == 'valid_header_key' and
                                 header[1] == 'valid_header_value',
-                            'header or value is different to input in. out > {header}')          
+                            f'header or value is different to input in. \
+                            out > {header}, {parsed_headers}')
 
     def test_empty_insantiation_of_headers(self):
         '''
@@ -99,22 +102,26 @@ class TestFrameClass(unittest.TestCase):
             body = 'a normal string'
         )
 
-        index_first_newline = str(frame.built_frame).index('\n')
-        index_final_newline = str(frame.built_frame).rindex('\n')
+        frame = frame.built_frame.decode("utf-8")
+        index_first_newline = frame.index("\n")
+        index_final_newline = frame.rindex("\n")
 
-        parsed_command = frame.built_frame[:index_first_newline]
-        parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
+        parsed_command = frame[:index_first_newline]
+        parsed_headers = frame[index_first_newline:index_final_newline].split('\n')
+        parsed_headers = [x for x in parsed_headers if x not in ('\r', '')]
 
         with self.subTest():
-            self.assertTrue(parsed_headers[-1] == '',
-                            'line termination is not present in headers')
+            self.assertTrue(len(parsed_headers) == 1,
+                            f'Header count is greater than 1, is  {len(parsed_headers)}\
+                                  at {parsed_headers}')
 
         for header in parsed_headers:
             if 'content-length' in header:
-                header = header.rstrip().split('\n')
+                header = header.rstrip().split(':')
                 with self.subTest():
                     self.assertTrue(header[0] == 'content-length',
-                                    'content length header key not valid')
+                                    f'content length header key\
+                                          not valid is {header}')
 
     def test_content_length_is_accurate(self):
         '''
@@ -128,11 +135,12 @@ class TestFrameClass(unittest.TestCase):
             headers = {},
             body=body_content
         )
-        index_first_newline = str(frame.built_frame).index('\n')
-        index_final_newline = str(frame.built_frame).rindex('\n')
+        frame = frame.built_frame.decode("utf-8")
+        index_first_newline = frame.index("\n")
+        index_final_newline = frame.rindex("\n")
 
-        parsed_command = frame.built_frame[:index_first_newline]
-        parsed_headers = frame.built_frame[index_first_newline:index_final_newline].split('\n')
+        parsed_command = frame[:index_first_newline]
+        parsed_headers = frame[index_first_newline:index_final_newline].split('\n')
 
         for header in parsed_headers:
             if 'content-length' in header:
