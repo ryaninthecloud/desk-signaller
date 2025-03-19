@@ -1,0 +1,6 @@
+name: Code Quality Checks
+
+on: 
+    pull_request:
+        branches: [ main, dev ]
+    
