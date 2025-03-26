@@ -40,5 +40,7 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message: |
-            🧪 TEST RESULTS
-            ${{steps.test_results.outputs.*}}
+            {
+              🧪 TEST RESULTS
+              ${{steps.test_results.outputs.*}}
+            }
