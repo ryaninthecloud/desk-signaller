@@ -29,7 +29,7 @@ class Frame:
             'UNSUBSCRIBE',
             'DISCONNECT'
         ]:
-            raise ValueError('Invalid command supplied.')
+            raise ValueError('Invalid STOMP COMMAND supplied.', command)
 
         self.command = command.upper().rstrip().strip()
         self.headers = headers
@@ -85,6 +85,10 @@ class Frame:
         first_newline_index = frame.index('\n')
         last_newline_index = frame.rindex('\n')
         null_terminator_index = frame.rindex('\x00')
+
+        if last_newline_index >= null_terminator_index:
+            _ = frame[:last_newline_index-1]
+            last_newline_index = _.rindex('\n')
 
         try:
             parsed_command = frame[:first_newline_index+1].rstrip()
@@ -233,8 +237,6 @@ class MicroSTOMPClient:
             body=''
         ).built_frame
         self.cx_socket.send(subscription_frame)
-        subscription_response = self.cx_socket.recv(5120).decode("utf-8")
-        print('(info): received response from topic server', subscription_response)
 
     def listen_for_messages(self):
         '''
