@@ -2,8 +2,8 @@
 Written as a patch-in for Stomp.py for Micropython.
 '''
 
-import socket as usocket
-import time as utime
+import usocket
+import utime
 
 class Frame:
     '''
