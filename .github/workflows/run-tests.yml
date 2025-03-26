@@ -33,7 +33,8 @@ jobs:
         run: micropython -m mip install unittest
 
       - name: run unittests
-        run: echo "$(micropython tests.py)\n" >> $GITHUB_OUTPUT
+        run: |
+          { echo "$(micropython tests.py)\n }" } >> "$GITHUB_OUTPUT"
         id: test_results
 
       - name: post test results
