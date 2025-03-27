@@ -19,6 +19,8 @@ jobs:
   run-unittests:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -33,4 +35,15 @@ jobs:
         run: micropython -m mip install unittest
 
       - name: run unittests
-        run: micropython tests.py 
+        run: |
+            echo 'TEST_RESULTS<<EOF' >> $GITHUB_OUTPUT
+            echo "$(micropython tests.py)\n" >> $GITHUB_OUTPUT 
+            echo 'EOF' >> $GITHUB_OUTPUT
+        id: test_results
+
+      - name: post test results
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+              🧪 TEST RESULTS
+              ${{ join(steps.test_results.outputs.*, '\n') }}
