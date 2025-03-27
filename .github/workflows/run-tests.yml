@@ -45,7 +45,5 @@ jobs:
         uses: mshick/add-pr-comment@v2
         with:
           message: |
-            {
               🧪 TEST RESULTS
-              ${{steps.test_results.outputs.*}}
-            }
+              ${{ join(steps.test_results.outputs.*, '\n') }}
