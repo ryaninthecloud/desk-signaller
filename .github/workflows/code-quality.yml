@@ -11,6 +11,8 @@ jobs:
     pylint-code-quality:
         name: PyLint Code Quality
         runs-on: ubuntu-latest
+        permissions:
+            pull-requests: write
         strategy:
             matrix:
                 python-version: ["3.12"]
@@ -26,4 +28,13 @@ jobs:
               pip install pylint
         - name: Analysing the code with pylint
           run: |
-              pylint $(git ls-files '*.py') || true
+              echo 'TEST_RESULTS<<EOF' >> $GITHUB_OUTPUT
+              echo "$(pylint $(git ls-files '*.py') || true)\n" >> $GITHUB_OUTPUT 
+              echo 'EOF' >> $GITHUB_OUTPUT
+          id: run_pylint
+        - name: post test results
+          uses: mshick/add-pr-comment@v2
+          with:
+            message: |
+                🧐 PYLINT RESULTS
+                ${{ join(steps.run_pylint.outputs.*, '\n') }}
