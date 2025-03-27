@@ -37,7 +37,7 @@ jobs:
       - name: run unittests
         run: |
             echo 'TEST_RESULTS<<EOF' >> $GITHUB_OUTPUT
-            echo '$(micropython tests.py)' >> $GITHUB_OUTPUT 
+            echo "$(micropython tests.py)\n" >> $GITHUB_OUTPUT 
             echo 'EOF' >> $GITHUB_OUTPUT
         id: test_results
 
