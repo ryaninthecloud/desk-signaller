@@ -22,6 +22,7 @@ class Frame:
         :command: must be string of CONNECT, STOMP, SUBSCRIBE, UNSUBSCRIBE, DISCONNECT
         '''
         if command.upper() not in [
+            'ERROR',
             'MESSAGE',
             'CONNECT',
             'STOMP',
