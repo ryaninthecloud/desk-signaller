@@ -2,8 +2,8 @@
 Written as a patch-in for Stomp.py for Micropython.
 '''
 
-import usocket
-import utime
+import socket as usocket
+import time as utime
 
 class Frame:
     '''
@@ -22,6 +22,7 @@ class Frame:
         :command: must be string of CONNECT, STOMP, SUBSCRIBE, UNSUBSCRIBE, DISCONNECT
         '''
         if command.upper() not in [
+            'ERROR',
             'MESSAGE',
             'CONNECT',
             'STOMP',
