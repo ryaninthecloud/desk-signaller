@@ -2,8 +2,9 @@
 Written as a patch-in for Stomp.py for Micropython.
 '''
 
-import usocket
-import utime
+import socket as usocket
+import time as utime
+import _thread
 
 class Frame:
     '''
@@ -25,6 +26,7 @@ class Frame:
             'ERROR',
             'MESSAGE',
             'CONNECT',
+            'ACK',
             'STOMP',
             'SUBSCRIBE',
             'UNSUBSCRIBE',
@@ -80,6 +82,7 @@ class Frame:
         : : Frame
         '''
         frame = str(frame)
+        print(frame)
         body_content = None
         parsed_command = None
         parsed_headers = {}
@@ -127,7 +130,8 @@ class MicroSTOMPClient:
                  client_id,
                  username,
                  password,
-                 on_message_callback):
+                 on_message_callback
+                ):
         '''
         :params:
         :host: str - STOMP server or broker address
@@ -146,6 +150,7 @@ class MicroSTOMPClient:
         self.on_message_callback = on_message_callback
         self.connected_to_broker = False
         self.exponential_backoff_period = 0
+        self.topic_subscribed_to = None
 
     def connect(self):
         '''
@@ -226,6 +231,9 @@ class MicroSTOMPClient:
             print('(error): cannot subscribe when no active cx')
             return
 
+        if ack.lower != 'auto':
+            print('(info): acknowledgment frames will be sent')
+
         print('(info): beginning subscription')
 
         subscription_frame = Frame(
@@ -238,6 +246,7 @@ class MicroSTOMPClient:
             body=''
         ).built_frame
         self.cx_socket.send(subscription_frame)
+        self.topic_subscribed_to = topic
 
     def listen_for_messages(self):
         '''
@@ -256,3 +265,25 @@ class MicroSTOMPClient:
                 print('(error): exception when listening or receiving, backing off', e)
                 self.exponential_backoff_period *= 2
                 utime.sleep(self.exponential_backoff_period)
+
+    def send_ack_frame(self, transaction_id: str):
+        '''
+        Sends an ACK frame to the server/broker.
+        This is necessary to provide a level of activity to the server
+        that will prevent it from closing the connection to the client.
+        '''
+        if not self.connected_to_broker:
+            print('(error): cannot send acknowledgment without connection.')
+            return False
+
+        ack_frame = Frame(
+            command = 'ACK',
+            headers = {
+                'subscription': self.cx_client_id,
+                'id' : transaction_id,
+                'transaction' : transaction_id
+            },
+            body = ''
+        ).built_frame
+        print('(info): sending acknlowedgments')
+        self.cx_socket.send(ack_frame)
