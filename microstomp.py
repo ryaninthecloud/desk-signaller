@@ -4,7 +4,6 @@ Written as a patch-in for Stomp.py for Micropython.
 
 import socket as usocket
 import time as utime
-import _thread
 
 class Frame:
     '''
@@ -82,7 +81,6 @@ class Frame:
         : : Frame
         '''
         frame = str(frame)
-        print(frame)
         body_content = None
         parsed_command = None
         parsed_headers = {}
@@ -108,7 +106,8 @@ class Frame:
                 header = header.rstrip().split(':')
                 parsed_headers[header[0]] = header[1]
             else:
-                print('(warn): header could not be parsed', header)
+                #print('(warn): header could not be parsed', header)
+                pass
 
         try:
             return cls(
@@ -151,6 +150,7 @@ class MicroSTOMPClient:
         self.connected_to_broker = False
         self.exponential_backoff_period = 0
         self.topic_subscribed_to = None
+        self.send_acknowledgment_frame = True
 
     def connect(self):
         '''
@@ -232,7 +232,8 @@ class MicroSTOMPClient:
             return
 
         if ack.lower != 'auto':
-            print('(info): acknowledgment frames will be sent')
+            self.send_acknowledgment_frame = False
+            print('(info): acknowledgment frames will not be sent')
 
         print('(info): beginning subscription')
 
@@ -259,7 +260,6 @@ class MicroSTOMPClient:
             try:
                 received_message = self.cx_socket.recv(5120).decode("utf-8")
                 if received_message:
-                    print("(info): received message")
                     self.on_message_callback(received_message)
             except Exception as e:
                 print('(error): exception when listening or receiving, backing off', e)
@@ -285,5 +285,6 @@ class MicroSTOMPClient:
             },
             body = ''
         ).built_frame
-        print('(info): sending acknlowedgments')
+        #print('(info): sending acknlowedgments')
         self.cx_socket.send(ack_frame)
+        return True
