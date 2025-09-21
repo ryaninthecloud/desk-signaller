@@ -155,5 +155,64 @@ class TestFrameClass(unittest.TestCase):
         '''
         pass
 
+class TestParserUtils(unittest.TestCase):
+    '''
+    Tests for the parser_utils methods
+    '''
+
+    def test_message_filtering_pass(self):
+        '''
+        Test to ensure that legitimate messages pass through
+        the filtering method.
+        '''
+        legitimate_message = {
+            "SF_MSG":
+                {
+                    "msg_type":"SF",
+                    "area_id":"Y2",
+                    "time":"1741800445000",
+                    "address":"71",
+                    "data":"ED"
+                }
+        }
+        from parser_utils import message_filtering_pass
+
+        self.assertTrue(
+            message_filtering_pass(
+                legitimate_message,
+                message_type='SF_MSG',
+                message_area_code='Y2',
+                signals_of_interest={'71':''}
+            )
+        )
+
+    def test_message_filtering_fail(self):
+        '''
+        Tests that when messages do not meet
+        the criteria specified they are
+        not successfully passed through
+        the filter
+        '''
+        legitimate_message = {
+            "SF_MSG":
+                {
+                    "msg_type":"SF",
+                    "area_id":"Y2",
+                    "time":"1741800445000",
+                    "address":"71",
+                    "data":"ED"
+                }
+        }
+        from parser_utils import message_filtering_pass
+
+        self.assertFalse(
+            message_filtering_pass(
+                legitimate_message,
+                message_type='C_MSG',
+                message_area_code='N2',
+                signals_of_interest={'00':''}
+            )
+        )
+
 if __name__ == '__main__':
     unittest.main()
