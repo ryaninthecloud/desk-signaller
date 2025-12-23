@@ -3,6 +3,8 @@ Contains code to simplify the parsing
 and handling of any dignal data 
 that is received.
 '''
+import os
+import json
 
 def signal_data_parser(data_passed: str) -> str:
     '''
@@ -74,7 +76,70 @@ def message_filtering_pass(message: dict,
 
     if signals_of_interest:
         _message_address = str(message[message_type]['address'])
-        if not _message_address.upper() in signals_of_interest.keys():
+        if not _message_address.upper() in signals_of_interest:
             return False
 
     return True
+
+def read_configuration_file(file_location: str) -> dict:
+    '''
+    read configuration file
+
+    args:
+        file_location: str: including file name
+    returns:
+        dict: of file configuration if valid else empty
+    '''
+    try:
+        raw_file = open(file_location).read()
+    except Exception as e:
+        print(f'critical: cannot find file at {file_location}')
+        return {}
+
+    try:
+        config_file = json.loads(raw_file)
+        config_file = dict(config_file)
+    except Exception as e:
+        print('critical: cannot parse the config file into json', e)
+        return {}
+
+    top_level_keys = config_file.keys()
+
+    if not top_level_keys:
+        return {}
+
+    for _k in top_level_keys:
+        try:
+            address_level_keys = config_file[_k].keys()
+        except Exception as e:
+            print(f'critical: could not access keys for area {_k}')
+            return {}
+
+        if not address_level_keys:
+            print(f'critical: no address level keys available')
+            return {}
+
+        for address_key in address_level_keys:
+            address_value = config_file[_k][address_key]
+            if not isinstance(address_value, list):
+                print(f'''critical: cannot parse config, address at area {_k} and
+                      address {address_key} is not a list''')
+                return {}
+
+            for light_configuration in address_value:
+                if not isinstance(light_configuration, dict):
+                    print(f'''critical: cannot parse config, address
+                          {address_key} does not contain a valid light
+                          configuration''')
+                    return {}
+
+            required_light_keys = ['platform', 'element_position',\
+                                   'green_pin',\
+                                   'red_pin']
+
+            if not all(rk in light_configuration for rk in required_light_keys):
+                print(f'''critical: required light configuration is missing
+                         keys, {light_configuration}''')
+                return {}
+
+    return config_file
