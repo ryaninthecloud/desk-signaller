@@ -1,0 +1,14 @@
+{
+	"Y2":{
+		"5A":
+			[
+				{
+					"platform":2,
+					"element_position":1,
+					"green_pin":12,
+					"red_pin":13
+				}
+			]
+		
+	}
+}
